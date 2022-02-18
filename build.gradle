@@ -1,0 +1,74 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	
+    id 'jacoco'
+    
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.github.chistousov.lib.programunitdb'
+version = '0.1.0'
+sourceCompatibility = '1.8'
+
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+	set('testcontainersVersion',"1.16.3")
+}
+
+dependencies {
+    implementation 'org.springframework:spring-jdbc:5.3.10'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation 'com.zaxxer:HikariCP:4.0.3'
+    testImplementation 'org.postgresql:postgresql:42.3.2'
+    //testImplementation "org.testcontainers:oracle-xe:1.16.3"
+
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+  }
+}
+
+test {
+	useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test 
+    reports {
+        xml.required = true
+    }
+}
+
+java {
+    withSourcesJar()
+}
+
+
+bootJar {
+	enabled = false
+}
+
+jar {
+	from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+	duplicatesStrategy = 'exclude'
+    manifest {
+        attributes('Implementation-Title': project.name,
+                   'Implementation-Version': project.version,
+				   'Class-Path': '.'
+				   )
+    }
+}
+
